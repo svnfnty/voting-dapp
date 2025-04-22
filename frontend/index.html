@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlockVote | Secure Blockchain Voting DApp</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="index.global.js"></script>
+  <script src="https://unpkg.com/@worldcoin/idkit-standalone@latest/build/bundle.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo">
+          <i class="fas fa-vote-yea"></i>
+          <h1>BlockVote</h1>
+          <span class="beta-tag">BETA</span>
+        </div>
+        <div class="wallet-info">
+          <div id="walletStatus" class="wallet-status">
+            <div class="status-indicator"></div>
+            <div id="walletAddress" class="wallet-address">
+              <i class="fas fa-circle-notch fa-spin"></i>
+              <span>Not connected</span>
+            </div>
+          </div>
+          <button id="connectWallet" class="wallet-button">
+            <span>Connect Wallet</span>
+            <i class="fas fa-wallet"></i>
+          </button>
+          <button id="verify-world-id" class="world-id-button" disabled>
+            <i class="fas fa-fingerprint"></i>
+            <span>Verify Identity</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="voting-section">
+        <div class="section-header">
+          <div class="section-title">
+            <h3><i class="fas fa-box-open"></i> Voting Contract</h3>
+            <div class="contract-info">
+              <span class="contract-address-label">Contract:</span>
+              <span class="contract-address" id="contractAddress">0x000...000</span>
+              <button class="copy-button" id="copyContractAddress">
+                <i class="far fa-copy"></i>
+              </button>
+            </div>
+          </div>
+          <div class="voting-controls">
+            <div class="voting-status">
+              <span class="status-badge" id="votingStatusBadge">Loading...</span>
+            </div>
+            <div class="voting-stats">
+              <div class="stat-item">
+                <i class="fas fa-users"></i>
+                <span id="totalVoters">0 voters</span>
+              </div>
+              <div class="stat-item">
+                <i class="fas fa-vote-yea"></i>
+                <span id="totalVotes">0 votes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="candidates-section">
+          <div class="section-subheader">
+            <h4><i class="fas fa-user-tie"></i> Candidates</h4>
+            <div class="sort-options">
+              <span>Sort by:</span>
+              <select id="sortCandidates">
+                <option value="votes">Vote count</option>
+                <option value="name">Alphabetical</option>
+                <option value="random">Random</option>
+              </select>
+            </div>
+          </div>
+          
+          <div id="candidates" class="candidates-grid">
+            <!-- Candidate cards will be populated by JS -->
+            <div class="loading-candidates">
+              <div class="loading-spinner">
+                <div class="spinner-circle"></div>
+                <div class="spinner-circle"></div>
+                <div class="spinner-circle"></div>
+              </div>
+              <p>Loading candidates from blockchain...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="history-section">
+        <div class="section-header">
+          <h3><i class="fas fa-link"></i> Blockchain Transactions</h3>
+          <div class="section-actions">
+            <button class="refresh-button" onclick="refreshHistory()">
+              <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="view-all-button" id="viewAllTransactions">
+              <i class="fas fa-external-link-alt"></i> View on Explorer
+            </button>
+          </div>
+        </div>
+        
+        <div id="transactionList" class="transaction-list">
+          <div class="empty-state">
+            <i class="fas fa-database"></i>
+            <p>No voting activity detected</p>
+            <small>Transactions will appear here once voting begins</small>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <div class="logo">
+            <i class="fas fa-vote-yea"></i>
+            <h2>BlockVote</h2>
+          </div>
+          <p class="tagline">Decentralized voting powered by blockchain</p>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+          </div>
+        </div>
+        <div class="footer-links">
+          <div class="link-group">
+            <h4>Product</h4>
+            <a href="#">How it works</a>
+            <a href="#">Features</a>
+            <a href="#">Security</a>
+          </div>
+          <div class="link-group">
+            <h4>Resources</h4>
+            <a href="#">Documentation</a>
+            <a href="#">Smart Contracts</a>
+            <a href="#">API</a>
+          </div>
+          <div class="link-group">
+            <h4>Company</h4>
+            <a href="#">About</a>
+            <a href="#">Blog</a>
+            <a href="#">Contact</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2023 BlockVote | All rights reserved</p>
+        <div class="legal-links">
+          <a href="#">Terms</a>
+          <a href="#">Privacy</a>
+          <a href="#">Cookies</a>
+        </div>
+      </div>
+    </footer>
+
+    <div id="statusMessage" class="status-message">
+      <div class="message-content">
+        <i class="fas fa-check-circle"></i>
+        <span class="message-text"></span>
+      </div>
+    </div>
+
+    <div id="confirmationModal" class="hidden">
+      <div class="modal-content">
+        <div class="modal-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <h3 class="modal-title">Blockchain Transaction</h3>
+        <p class="modal-message">This action will create an on-chain transaction. Please confirm your vote below.</p>
+        <div class="transaction-details">
+          <div class="detail-row">
+            <span class="detail-label">Network:</span>
+            <span class="detail-value" id="modalNetwork">Ethereum Mainnet</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Gas Fee:</span>
+            <span class="detail-value" id="modalGasFee">~$0.50</span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="cancelVerifyBtn" class="btn-cancel btn-ripple">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            Cancel
+          </button>
+          <button id="confirmVerifyBtn" class="btn-confirm btn-ripple">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Confirm Vote
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="transactionModal" class="hidden">
+      <div class="modal-content">
+        <div class="modal-icon processing">
+          <i class="fas fa-cog fa-spin"></i>
+        </div>
+        <h3 class="modal-title">Processing Transaction</h3>
+        <p class="modal-message">Your vote is being recorded on the blockchain...</p>
+        <div class="transaction-hash">
+          <span>TX Hash:</span>
+          <a href="#" id="transactionHashLink" target="_blank">0x123...456</a>
+          <button class="copy-button small" id="copyTxHash">
+            <i class="far fa-copy"></i>
+          </button>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress"></div>
+          </div>
+          <span class="progress-text">Waiting for confirmation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
