@@ -7,7 +7,7 @@ const app = express();
 const port = 3000;
 
 // Configuration
-const GANACHE_URL = 'http://127.0.0.1:7545';
+const GANACHE_URL = 'http://127.0.0.1:8545';
 const CONTRACT_PATH = '../build/contracts/Voting.json';
 const TRANSACTION_HISTORY_PATH = './transactionHistory.json';
 const VERIFIED_USERS_PATH = './verified-users.json';
