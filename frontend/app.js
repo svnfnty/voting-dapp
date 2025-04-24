@@ -32,6 +32,7 @@ async function initializeApplication() {
       console.log("[INIT] Ethereum provider found");
       await initializeWallet();
       await loadCandidates();
+      showStatus("Application initialized successfully", 'success');
     } else {
       console.log("[INIT] No Ethereum provider - test mode activated");
       activateTestMode();
@@ -330,37 +331,54 @@ function updateVerificationUI(isVerified) {
 
 
 
-async function checkEthereumProvider() {
-  return !!(window.ethereum || window.web3);
+async function checkEthereumProvider(retries = 5, delay = 500) {
+  for (let i = 0; i < retries; i++) {
+    if (window.ethereum) {
+      console.log("[CHECK] Ethereum provider detected:", window.ethereum);
+      return true;
+    }
+    console.warn(`[CHECK] Ethereum provider not detected. Retrying... (${i + 1}/${retries})`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+
+  console.error("[CHECK] No Ethereum provider detected after retries.");
+  showStatus("No Ethereum provider detected. Please use MetaMask.", 'error');
+  return false;
 }
 
-async function initializeWallet() {
+async function initializeWallet(retries = 3, delay = 1000) {
   if (!window.ethereum && !window.web3) {
     throw new Error('No Ethereum provider detected');
   }
 
-  try {
-    if (window.ethereum) {
-      window.web3 = new Web3(window.ethereum);
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      if (accounts.length > 0) {
-        window.userAddress = accounts[0];
-        walletAddressElement.textContent = `Connected: ${shortenAddress(accounts[0])}`;
-        return true;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`[WALLET] Attempt ${attempt} to connect wallet...`);
+      if (window.ethereum) {
+        window.web3 = new Web3(window.ethereum);
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (accounts.length > 0) {
+          window.userAddress = accounts[0];
+          walletAddressElement.textContent = `Connected: ${shortenAddress(accounts[0])}`;
+          console.log("[WALLET] Wallet connected:", accounts[0]);
+          return true;
+        }
+      } else if (window.web3) {
+        window.web3 = new Web3(web3.currentProvider);
+        const accounts = await web3.eth.getAccounts();
+        if (accounts.length > 0) {
+          window.userAddress = accounts[0];
+          walletAddressElement.textContent = `Connected: ${shortenAddress(accounts[0])}`;
+          console.log("[WALLET] Wallet connected:", accounts[0]);
+          return true;
+        }
       }
-    } else if (window.web3) {
-      window.web3 = new Web3(web3.currentProvider);
-      const accounts = await web3.eth.getAccounts();
-      if (accounts.length > 0) {
-        window.userAddress = accounts[0];
-        walletAddressElement.textContent = `Connected: ${shortenAddress(accounts[0])}`;
-        return true;
-      }
+      throw new Error('No accounts found');
+    } catch (error) {
+      console.error(`[WALLET] Attempt ${attempt} failed:`, error);
+      if (attempt === retries) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-    throw new Error('No accounts found');
-  } catch (error) {
-    console.error("Wallet connection error:", error);
-    throw error;
   }
 }
 
