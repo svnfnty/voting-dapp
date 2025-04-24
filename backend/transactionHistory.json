@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "voter": "0x7503D61BBed8CC468Be5bda5767Ae800242a1673",
+    "candidateId": 0,
+    "transactionHash": "0xd14d2140ab1490c76d2a9782f2c3bb962b95befc5cb32be2bea190ae5ef612ed",
+    "timestamp": "2025-04-24T00:51:07.548Z"
+  }
+]
