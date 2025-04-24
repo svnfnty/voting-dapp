@@ -1240,3 +1240,23 @@ body {
     width: 100%;
   }
 }
+
+.analytics-section {
+  background-color: var(--card-bg);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  margin-bottom: 3rem;
+}
+
+.chart-container {
+  position: relative;
+  height: 400px;
+  width: 100%;
+  overflow: hidden; /* Ensure smooth visuals */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9));
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add subtle shadow for depth */
+}

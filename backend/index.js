@@ -223,7 +223,6 @@ app.post('/vote', async (req, res) => {
     });
   }
 });
-
 app.get('/candidates', async (req, res) => {
   try {
     console.log('Fetching candidates...');
@@ -273,6 +272,38 @@ app.get('/voting-history', async (req, res) => {
       error: 'Error fetching voting history',
       details: error.message
     });
+  }
+});
+
+app.get('/candidate-votes', (req, res) => {
+  try {
+    console.log('Calculating vote counts from transaction history...');
+    const transactionHistory = loadTransactionHistory();
+
+    // Initialize vote counts for each candidate
+    const voteCounts = {};
+
+    // Process transaction history
+    transactionHistory.forEach(tx => {
+      const candidateId = tx.candidateId;
+      if (!voteCounts[candidateId]) {
+        voteCounts[candidateId] = 0;
+      }
+      voteCounts[candidateId]++;
+    });
+
+    // Format the response
+    const candidatesWithVotes = SAMPLE_CANDIDATES.map(candidate => ({
+      id: candidate.id,
+      name: candidate.name,
+      voteCount: voteCounts[candidate.id] || 0
+    }));
+
+    console.log('Vote counts calculated:', candidatesWithVotes);
+    res.json({ success: true, candidates: candidatesWithVotes });
+  } catch (error) {
+    console.error('Error calculating vote counts:', error);
+    res.status(500).json({ success: false, message: 'Error calculating vote counts' });
   }
 });
 
