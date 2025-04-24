@@ -176,11 +176,16 @@ app.post('/vote', async (req, res) => {
       .estimateGas({ from: accounts[0] });
     console.log(`Gas estimate: ${gasEstimate}`);
 
+    console.log('Fetching current gas price...');
+    const gasPrice = await web3.eth.getGasPrice();
+    console.log(`Gas price: ${gasPrice}`);
+
     console.log('Sending vote transaction...');
     const receipt = await contract.methods.vote(candidateId)
       .send({
         from: accounts[0],
-        gas: Number(gasEstimate) + 10000
+        gas: Number(gasEstimate) + 10000,
+        gasPrice: gasPrice
       });
     console.log('Transaction mined:', receipt);
 
