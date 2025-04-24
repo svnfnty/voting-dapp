@@ -32,6 +32,7 @@ async function initializeApplication() {
       console.log("[INIT] Ethereum provider found");
       await initializeWallet();
       await loadCandidates();
+      await fetchAndDisplayVoteCounts(); // Fetch and display vote counts
       showStatus("Application initialized successfully", 'success');
     } else {
       console.log("[INIT] No Ethereum provider - test mode activated");
@@ -116,6 +117,101 @@ async function verifyWithWorldID() {
   }
 }
 
+let votingChart; // Chart.js instance
+
+// Initialize the voting chart
+function initializeVotingChart() {
+  const ctx = document.getElementById('votingChart').getContext('2d');
+  const colors = [
+    'rgba(78, 68, 206, 1)', // Blue
+    'rgba(34, 197, 94, 1)', // Green
+    'rgba(239, 68, 68, 1)', // Red
+    'rgba(234, 179, 8, 1)', // Yellow
+    'rgba(59, 130, 246, 1)', // Light Blue
+  ];
+  const backgroundColors = colors.map(color => color.replace('1)', '0.2)')); // Transparent versions
+
+  votingChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: Array(10).fill(''), // Start with empty labels for the heartbeat effect
+      datasets: currentCandidates.map((candidate, index) => ({
+        label: candidate.name,
+        data: Array(10).fill(candidate.voteCount), // Start with the vote count as the baseline
+        borderColor: colors[index % colors.length],
+        backgroundColor: backgroundColors[index % backgroundColors.length],
+        borderWidth: 2,
+        tension: 0.5, // Create a wavy effect
+        fill: false, // No fill under the line for a cleaner heartbeat look
+      })),
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true },
+        tooltip: { enabled: true },
+      },
+      scales: {
+        x: { display: false }, // Hide x-axis for a cleaner look
+        y: { 
+          title: { display: true, text: 'Votes' }, 
+          beginAtZero: true 
+        },
+      },
+      animation: {
+        duration: 500, // Faster animation for a heartbeat effect
+        easing: 'easeInOutSine',
+      }
+    }
+  });
+
+  // Update the chart every minute based on vote counts
+  setInterval(async () => {
+    console.log("[HEARTBEAT] Fetching updated vote counts...");
+    await fetchAndDisplayVoteCounts(); // Fetch the latest vote counts
+    votingChart.data.labels.push(''); // Add a new empty label
+    votingChart.data.labels.shift(); // Remove the oldest label
+    votingChart.data.datasets.forEach((dataset, index) => {
+      const currentVoteCount = currentCandidates[index].voteCount;
+      const previousVoteCount = dataset.data[dataset.data.length - 1];
+      const interpolatedValue = (previousVoteCount + currentVoteCount) / 2; // Smooth transition
+      dataset.data.push(interpolatedValue); // Add the interpolated value
+      dataset.data.shift(); // Remove the oldest value
+    });
+    votingChart.update();
+  }, 6000); // Update every minute
+}
+
+// Update the voting chart with new data
+function updateVotingChart() {
+  if (!votingChart) return;
+  votingChart.data.datasets.forEach((dataset, index) => {
+    dataset.data[dataset.data.length - 1] = currentCandidates[index].voteCount; // Update the latest vote count
+  });
+  votingChart.update();
+}
+
+// Modify fetchAndDisplayVoteCounts to update the chart
+async function fetchAndDisplayVoteCounts() {
+  try {
+    console.log("[DATA] Fetching vote counts...");
+    const response = await fetch('http://localhost:3000/candidate-votes');
+    if (!response.ok) throw new Error('Failed to fetch vote counts');
+
+    const data = await response.json();
+    if (data.success) {
+      console.log("[DATA] Vote counts fetched successfully:", data.candidates);
+      currentCandidates = data.candidates; // Update the currentCandidates array
+      displayCandidates(); // Re-render the candidates with updated vote counts
+      updateVotingChart(); // Update the chart with new data
+    } else {
+      throw new Error(data.message || 'Failed to fetch vote counts');
+    }
+  } catch (error) {
+    console.error("[ERROR] Fetching vote counts failed:", error);
+    showStatus("Failed to fetch vote counts", 'error');
+  }
+}
 
 async function handleVote(candidateId) {
   try {
@@ -578,6 +674,11 @@ document.addEventListener('DOMContentLoaded', () => {
   window.handleWorldIDSuccess = handleWorldIDSuccess;
   // You might need to load currentCandidates first
   loadVotingHistory();
+});
+
+// Initialize the chart on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  initializeVotingChart();
 });
 
 // Make functions available globally
