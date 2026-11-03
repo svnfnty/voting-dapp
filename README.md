@@ -60,15 +60,15 @@ flowchart TD
     end
 
     subgraph Server["Backend Application (Node.js / Express)"]
-        API["REST API (/vote, /candidates, /history)"]
+        API["REST API: /vote, /candidates, /history"]
         W3B["Web3.js Engine"]
         EVL["VoteCast Event Listener"]
-        Store[("Local Store\n(verified-users.json\ntransactionHistory.json)")]
+        Store[("Local Store: verified-users & transactions")]
     end
 
-    subgraph Blockchain["Blockchain Network (Ganache / BSC Testnet)"]
+    subgraph Blockchain["Blockchain Network: Ganache / BSC Testnet"]
         SC["Voting.sol Smart Contract"]
-        State[("Contract State\nhasVoted & candidates")]
+        State[("Contract State: hasVoted & candidates")]
         Events["VoteCast Events"]
     end
 
@@ -79,17 +79,17 @@ flowchart TD
     UI -->|1. Connect Account| W3F
     UI -->|2. Request ZK Proof| WID
     WID -->|Verify Human| WCloud
-    WID -->|Proof & Nullifier| UI
-    UI -->|3. Submit Vote + Proof| API
+    WID -->|Proof and Nullifier| UI
+    UI -->|3. Submit Vote and Proof| API
     API -->|Store Nullifier| Store
-    API -->|4. Dispatch Tx (estimateGas + send)| W3B
-    W3B -->|Execute vote()| SC
+    API -->|4. Dispatch Tx - estimateGas and send| W3B
+    W3B -->|Execute vote function| SC
     SC -->|Update State| State
     SC -->|Emit| Events
-    Events -->|Subscribe / Sync| EVL
+    Events -->|Subscribe and Sync| EVL
     EVL -->|Append Record| Store
     Store -->|Return Stats| API
-    API -->|Live Poll & Refresh| CJS
+    API -->|Live Poll and Refresh| CJS
 ```
 
 ### Voting & Verification Workflow
@@ -114,10 +114,10 @@ sequenceDiagram
     Backend-->>Frontend: Verification confirmed (rejects if duplicate)
 
     Voter->>Frontend: Confirm vote for Candidate
-    Frontend->>Backend: POST /vote { candidateId, voterAddress, nullifier_hash }
+    Frontend->>Backend: POST /vote with candidateId, voterAddress, nullifier_hash
     
     Backend->>Backend: Validate nullifier & check previous votes
-    Backend->>Blockchain: Estimate gas & contract.methods.vote(candidateId).send()
+    Backend->>Blockchain: Estimate gas & send vote transaction
     Blockchain->>Blockchain: Check !hasVoted[msg.sender], increment candidate vote count
     Blockchain-->>Backend: Return Transaction Receipt & emit VoteCast event
     
